@@ -67,12 +67,19 @@ struct FengNiaoCommand: ParsableCommand {
     )
     var listOnly: Bool = false
 
+    @Flag(
+        name: .long,
+        help: "Names with numerical affixes without '%' will not count as used if enabled (myImage -> 123myImage456)."
+    )
+    var disallowNumericalAffixes: Bool = false
+
     func run() throws {
         let fengNiao = FengNiao(
             projectPath: project,
             excludedPaths: exclude,
             resourceExtensions: resourceExtensions,
-            searchInFileExtensions: fileExtensions
+            searchInFileExtensions: fileExtensions,
+            disallowNumericalAffixes: disallowNumericalAffixes
         )
 
         let unusedFiles: [FileInfo]

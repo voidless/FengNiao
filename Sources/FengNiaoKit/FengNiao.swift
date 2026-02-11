@@ -100,18 +100,20 @@ public struct FengNiao {
     let excludedPaths: [Path]
     let resourceExtensions: [String]
     let searchInFileExtensions: [String]
-    
+    let disallowNumericalAffixes: Bool
+
     let regularDirExtensions = ["imageset", "launchimage", "appiconset", "stickersiconset", "complicationset", "bundle"]
     var nonDirExtensions: [String] {
         return resourceExtensions.filter { !regularDirExtensions.contains($0) }
     }
     
-    public init(projectPath: String, excludedPaths: [String], resourceExtensions: [String], searchInFileExtensions: [String]) {
+    public init(projectPath: String, excludedPaths: [String], resourceExtensions: [String], searchInFileExtensions: [String], disallowNumericalAffixes: Bool = false) {
         let path = Path(projectPath).absolute()
         self.projectPath = path
         self.excludedPaths = excludedPaths.map { path + Path($0) }
         self.resourceExtensions = resourceExtensions
         self.searchInFileExtensions = searchInFileExtensions
+        self.disallowNumericalAffixes = disallowNumericalAffixes
     }
     
     public func unusedFiles() throws -> [FileInfo] {
@@ -130,7 +132,7 @@ public struct FengNiao {
         )
         let combinedUsedNames = usedNames.union(resourcesUsedByGeneratedSymbols)
         
-        return FengNiao.filterUnused(from: allResources, used: combinedUsedNames).map( FileInfo.init )
+        return FengNiao.filterUnused(from: allResources, used: combinedUsedNames, disallowNumericalAffixes: disallowNumericalAffixes).map( FileInfo.init )
     }
     
     // Return a failed list of deleting
@@ -297,10 +299,10 @@ public struct FengNiao {
         return result
     }
     
-    static func filterUnused(from all: [String: Set<String>], used: Set<String>) -> Set<String> {
+    static func filterUnused(from all: [String: Set<String>], used: Set<String>, disallowNumericalAffixes: Bool = false) -> Set<String> {
         let unusedPairs = all.filter { key, _ in
             return !used.contains(key) &&
-                   !used.contains { $0.similarPatternWithNumberIndex(other: key) }
+                   !used.contains { $0.similarPatternWithNumberIndex(other: key, disallowNumericalAffixes: disallowNumericalAffixes) }
         }
         return Set( unusedPairs.flatMap { $0.value } )
     }
@@ -309,9 +311,10 @@ public struct FengNiao {
 let digitalRex = try! NSRegularExpression(pattern: "(\\d+)", options: .caseInsensitive)
 extension String {
     
-    func similarPatternWithNumberIndex(other: String) -> Bool {
+    func similarPatternWithNumberIndex(other: String, disallowNumericalAffixes: Bool = false) -> Bool {
         // self -> pattern "image%02d"
         // other -> name "image01"
+        guard !disallowNumericalAffixes || contains("%") else { return false }
         let matches = digitalRex.matches(in: other, options: [], range: other.fullRange)
         // No digital found in resource key.
         guard matches.count >= 1 else { return false }

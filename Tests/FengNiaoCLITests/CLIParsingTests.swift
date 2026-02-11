@@ -14,6 +14,7 @@ struct CLIParsingTests {
         #expect(command.skipProjReference == false)
         #expect(command.xcodeWarnings == false)
         #expect(command.listOnly == false)
+        #expect(command.disallowNumericalAffixes == false)
     }
 
     @Test("parses simple flags")
@@ -22,12 +23,14 @@ struct CLIParsingTests {
             "--force",
             "--skip-proj-reference",
             "--xcode-warnings",
-            "--list-only"
+            "--list-only",
+            "--disallow-numerical-affixes"
         ])
         #expect(command.force)
         #expect(command.skipProjReference)
         #expect(command.xcodeWarnings)
         #expect(command.listOnly)
+        #expect(command.disallowNumericalAffixes)
     }
 
     @Test("parses options with values")

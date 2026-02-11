@@ -31,6 +31,48 @@ struct FileFilterTests {
         #expect(result == expected)
     }
 
+    @Test("filters files with affixes correctly when allowed")
+    func filtersFilesWithAffixesWhenAllowed() {
+        let all: [String: Set<String>] = [
+            "suffix20": ["suffix20.png", "suffix20@2x.png"],
+            "50prefix": ["50prefix.png", "50prefix@2x.png"],
+            "10both20": ["10both20.png", "10both20@2x.png"],
+        ]
+        let used: Set<String> = ["suffix", "prefix", "both"]
+
+        let result = FengNiao.filterUnused(from: all, used: used, disallowNumericalAffixes: false)
+        let expected: Set<String> = ["10both20@2x.png", "10both20.png"]
+        #expect(result == expected)
+    }
+
+    @Test("filters files with affixes correctly when disallowed")
+    func filtersFilesWithAffixesWhenDisallowed() {
+        let all: [String: Set<String>] = [
+            "suffix20": ["suffix20.png", "suffix20@2x.png"],
+            "50prefix": ["50prefix.png", "50prefix@2x.png"],
+            "10both20": ["10both20.png", "10both20@2x.png"],
+        ]
+        let used: Set<String> = ["suffix", "prefix", "both"]
+
+        let result = FengNiao.filterUnused(from: all, used: used, disallowNumericalAffixes: true)
+        let expected: Set<String> = ["suffix20.png", "suffix20@2x.png", "50prefix.png", "50prefix@2x.png", "10both20@2x.png", "10both20.png"]
+        #expect(result == expected)
+    }
+
+    @Test("filters files with percent sign correctly when disallowed")
+    func filtersFilesWithPercentSignWhenDisallowed() {
+        let all: [String: Set<String>] = [
+            "suffix20": ["suffix20.png", "suffix20@2x.png"],
+            "50prefix": ["50prefix.png", "50prefix@2x.png"],
+            "10both20": ["10both20.png", "10both20@2x.png"],
+        ]
+        let used: Set<String> = ["suffix%d", "%dprefix", "%dboth%d"]
+
+        let result = FengNiao.filterUnused(from: all, used: used, disallowNumericalAffixes: true)
+        let expected: Set<String> = ["10both20@2x.png", "10both20.png"]
+        #expect(result == expected)
+    }
+
     @Test("does not filter similar pattern")
     func doesNotFilterSimilarPattern() {
         let all: [String: Set<String>] = [
